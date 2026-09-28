@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Logbook RI</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Logbook RI">
+<link rel="icon" href="data:,">
+<style>
+:root{
+  --bg:#f4f6f8; --card:#ffffff; --text:#16202a; --muted:#5b6b7a; --border:#e1e6ea;
+  --primary:#0e6e8c; --primary-dark:#0a4f66; --accent:#12a17f; --danger:#c0392b; --warn:#c98a12;
+  --radius:14px; --shadow:0 1px 3px rgba(0,0,0,.08);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10161c; --card:#1a232c; --text:#eef2f5; --muted:#9fb0bd; --border:#2b3742;
+    --primary:#37b3d6; --primary-dark:#1c8aad; --accent:#3fd6ab; --danger:#e8695d; --warn:#e0ab4a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10161c; --card:#1a232c; --text:#eef2f5; --muted:#9fb0bd; --border:#2b3742;
+  --primary:#37b3d6; --primary-dark:#1c8aad; --accent:#3fd6ab; --danger:#e8695d; --warn:#e0ab4a;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  -webkit-text-size-adjust:100%;}
+h1,h2,h3{margin:.2em 0}
+header.top{position:sticky;top:0;z-index:20;background:var(--primary);color:#fff;
+  padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;display:flex;align-items:center;justify-content:space-between}
+header.top h1{font-size:18px;font-weight:700}
+main{padding:12px 12px 90px;max-width:640px;margin:0 auto}
+.banner{background:#fff3cd;color:#7a5b00;border:1px solid #e8d38a;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+:root[data-theme="dark"] .banner, @media (prefers-color-scheme: dark){.banner{background:#3a3410;color:#f0d878;border-color:#5a4f18}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;text-align:center}
+.stat .n{font-size:26px;font-weight:800;color:var(--primary)}
+.stat .l{font-size:12px;color:var(--muted)}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px;font-weight:600}
+input,select,textarea{width:100%;padding:12px;font-size:16px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text)}
+textarea{min-height:70px}
+.btn{display:inline-block;width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;text-align:center}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-secondary{background:var(--border);color:var(--text)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-sm{width:auto;padding:8px 12px;font-size:13px;border-radius:9px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>.btn{flex:1}
+nav.bottom{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);
+  display:flex;z-index:30;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.bottom button{flex:1;background:none;border:none;padding:10px 2px;font-size:11px;color:var(--muted);cursor:pointer}
+nav.bottom button.active{color:var(--primary);font-weight:700}
+nav.bottom .ic{font-size:18px;display:block}
+.fab{position:fixed;right:18px;bottom:calc(74px + env(safe-area-inset-bottom,0px));background:var(--accent);color:#fff;
+  border:none;border-radius:50px;padding:16px 20px;font-size:15px;font-weight:800;box-shadow:0 4px 10px rgba(0,0,0,.25);z-index:31;cursor:pointer}
+.section{display:none}
+.section.active{display:block}
+.case-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px}
+.case-card .top-row{display:flex;justify-content:space-between;font-weight:700}
+.case-card .sub{color:var(--muted);font-size:13px;margin-top:2px}
+.case-card .detail{display:none;margin-top:8px;font-size:13px;border-top:1px solid var(--border);padding-top:8px}
+.case-card .detail.open{display:block}
+.case-card .detail p{margin:3px 0}
+.tag{display:inline-block;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:2px 7px;font-size:11px;margin-right:4px}
+details.more{margin-top:8px;border-top:1px dashed var(--border);padding-top:6px}
+summary{cursor:pointer;font-weight:700;color:var(--primary);padding:4px 0}
+.group-label{font-size:12px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.03em;margin:16px 0 2px;padding-top:10px;border-top:1px solid var(--border)}
+.group-label:first-of-type{border-top:none;margin-top:8px;padding-top:0}
+.chip-group{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 2px}
+.chip{padding:11px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);font-size:14px;font-weight:600;cursor:pointer;color:var(--text);user-select:none}
+.chip.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
+.donut-wrap{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.donut-box{text-align:center;flex:1;min-width:140px}
+.donut-box .pct{font-size:22px;font-weight:800;fill:var(--text)}
+.donut-box .lbl{font-size:12px;color:var(--muted);margin-top:4px}
+.donut-box .sub{font-size:11px;color:var(--muted)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:40;display:none}
+.overlay.show{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-radius:16px 16px 0 0;z-index:41;
+  max-height:88vh;overflow-y:auto;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:none}
+.sheet.show{display:block}
+.sheet-handle{width:40px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 10px}
+.toast{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);
+  background:#16202a;color:#fff;padding:10px 16px;border-radius:10px;z-index:60;font-size:14px;display:none}
+.toast.show{display:block}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:13px}
+.bar-label{width:130px;flex-shrink:0;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;background:var(--bg);border-radius:6px;overflow:hidden;height:14px}
+.bar-fill{background:var(--primary);height:100%}
+.bar-val{width:28px;text-align:right;font-weight:700}
+.progress{background:var(--bg);border-radius:8px;overflow:hidden;height:18px;margin:6px 0}
+.progress > div{background:var(--accent);height:100%;color:#fff;font-size:11px;text-align:right;padding-right:4px;line-height:18px}
+select[multiple]{height:auto}
+.small{font-size:12px;color:var(--muted)}
+a.linklike{color:var(--primary);font-weight:600;cursor:pointer}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1 id="pageTitle">Logbook RI</h1>
+  <button class="btn-sm btn-secondary" onclick="toggleTheme()" style="background:rgba(255,255,255,.2);color:#fff">🌓</button>
+</header>
+<main>
+
+<section id="sec-dashboard" class="section">
+  <div class="banner">⚠️ No introducir datos identificativos de pacientes.</div>
+  <div class="card">
+    <div class="row">
+      <button class="btn btn-primary" onclick="openForm()">+ NUEVO CASO</button>
+      <button class="btn btn-secondary" onclick="duplicateLast()">Duplicar último</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:6px">Progreso hacia requisitos oficiales</h3>
+    <div class="donut-wrap" id="reqDonuts"></div>
+    <p class="small" style="margin-top:8px">Fuentes: CIRSE/EBIR y ESMINT/EBNR (ver Estadísticas → Objetivos para detalle y enlaces).</p>
+  </div>
+  <h3>Últimos casos</h3>
+  <div id="dashRecent"></div>
+</section>
+
+<section id="sec-logbook" class="section">
+  <div class="row" style="margin-bottom:10px">
+    <button class="btn btn-secondary btn-sm" onclick="toggleFilters()">Filtros</button>
+    <button class="btn btn-secondary btn-sm" onclick="clearFilters()">Limpiar filtros</button>
+    <button class="btn btn-accent btn-sm" onclick="exportCSV()">Exportar CSV</button>
+  </div>
+  <div class="card" id="filterPanel" style="display:none">
+    <label>Año</label><select id="fYear"></select>
+    <label>Desde</label><input type="date" id="fFrom">
+    <label>Hasta</label><input type="date" id="fTo">
+    <label>Área</label><select id="fArea"></select>
+    <label>Subespecialidad</label><select id="fSub"></select>
+    <label>Papel</label><select id="fRole"></select>
+    <label>Resultado técnico</label><select id="fResult"></select>
+    <label>Complicación</label><select id="fCompl"></select>
+    <label>Buscar procedimiento</label><input type="text" id="fText" placeholder="texto libre">
+    <label>Buscar por Nº de historia</label><input type="text" id="fRecord" placeholder="solo busca en este dispositivo">
+    <button class="btn btn-primary" style="margin-top:12px" onclick="renderLogbook()">Aplicar</button>
+  </div>
+  <div id="logbookCount" class="small" style="margin-bottom:6px"></div>
+  <div id="logbookList"></div>
+</section>
+
+<section id="sec-stats" class="section">
+  <div class="row" style="margin-bottom:10px"><select id="statsYear" onchange="renderStats()"></select></div>
+  <div class="card"><h3>Diagnóstico vs Terapéutico</h3><div id="statDT"></div></div>
+  <div class="card"><h3>Casos por área</h3><div id="statArea"></div></div>
+  <div class="card"><h3>Casos por papel</h3><div id="statRole"></div></div>
+  <div class="card"><h3>Casos por región anatómica</h3><div id="statRegion"></div></div>
+  <div class="card"><h3>Casos por mes</h3><div id="statMonth"></div></div>
+  <div class="card"><h3>Éxito técnico / Complicaciones</h3><div id="statResult"></div></div>
+  <div class="card">
+    <h3>Requisitos oficiales (CIRSE/EBIR, ESMINT/EBNR)</h3>
+    <div id="officialReqList"></div>
+    <p class="small">Estas cifras son las únicas que hemos podido verificar públicamente a día de hoy. No incluyen un número propio de SERVEI (su fellowship se alinea con CIRSE/EBIR pero no publica un mínimo distinto). Si tu programa te da otra cifra oficial, añádela como objetivo personal abajo.</p>
+    <h3 style="margin-top:20px">Objetivos personales</h3>
+    <div id="goalsList"></div>
+    <button class="btn btn-secondary" style="margin-top:10px" onclick="openGoalForm()">+ Nuevo objetivo</button>
+  </div>
+</section>
+
+<section id="sec-config" class="section">
+  <div class="card">
+    <h3>Listas editables</h3>
+    <p class="small">Una opción por línea. Guarda para aplicar los cambios.</p>
+    <div id="configLists"></div>
+    <button class="btn btn-primary" onclick="saveConfigLists()">Guardar listas</button>
+    <button class="btn btn-secondary" style="margin-top:8px" onclick="resetConfig()">Restaurar configuración predeterminada</button>
+  </div>
+  <div class="card">
+    <h3>Preferencias</h3>
+    <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="rememberLast" style="width:auto" onchange="saveRememberPref()"> Recordar últimas selecciones</label>
+  </div>
+  <div class="card">
+    <h3>Copia de seguridad</h3>
+    <button class="btn btn-primary" onclick="exportJSON()">Exportar copia de seguridad JSON</button>
+    <label style="margin-top:10px">Importar copia de seguridad JSON</label>
+    <input type="file" id="importFile" accept="application/json" onchange="importJSON(event)">
+    <button class="btn btn-secondary" style="margin-top:10px" onclick="exportCSV()">Exportar a Excel/CSV</button>
+    <button class="btn btn-secondary" style="margin-top:10px" onclick="printSummary()">Generar resumen anual (imprimir)</button>
+  </div>
+  <div class="card">
+    <h3>Sincronización con Google Sheets</h3>
+    <p class="small">Requiere conexión a internet y un Google Apps Script configurado en tu cuenta (ver instrucciones aparte). Solo funciona abriendo este archivo directamente o alojado por ti mismo — el enlace de Claude bloquea conexiones externas por seguridad.</p>
+    <label>URL de la aplicación web (Apps Script)</label><input type="text" id="syncUrl" placeholder="https://script.google.com/macros/s/.../exec">
+    <label>Token secreto</label><input type="text" id="syncToken" placeholder="mismo token que en el script">
+    <label style="display:flex;align-items:center;gap:8px;margin-top:10px"><input type="checkbox" id="syncAuto" style="width:auto"> Sincronizar automáticamente al guardar un caso</label>
+    <button class="btn btn-primary" style="margin-top:10px" onclick="saveSyncConfig()">Guardar configuración</button>
+    <button class="btn btn-accent" style="margin-top:8px" onclick="syncNow()">Sincronizar ahora</button>
+    <p class="small" id="syncStatus" style="margin-top:8px"></p>
+  </div>
+  <div class="card">
+    <h3>Datos</h3>
+    <button class="btn btn-secondary" onclick="loadSampleData()">Cargar datos de ejemplo</button>
+    <button class="btn btn-danger" style="margin-top:8px" onclick="wipeAll()">Borrar todos los datos</button>
+  </div>
+</section>
+
+</main>
+
+<button class="fab" onclick="openForm()">+ NUEVO CASO</button>
+
+<nav class="bottom">
+  <button data-sec="dashboard" onclick="showSection('dashboard')"><span class="ic">🏠</span>Dashboard</button>
+  <button data-sec="logbook" onclick="showSection('logbook')"><span class="ic">📋</span>Logbook</button>
+  <button data-sec="stats" onclick="showSection('stats')"><span class="ic">📊</span>Estadísticas</button>
+  <button data-sec="config" onclick="showSection('config')"><span class="ic">⚙️</span>Config</button>
+</nav>
+
+<div class="overlay" id="overlay" onclick="closeSheets()"></div>
+
+<div class="sheet" id="caseSheet">
+  <div class="sheet-handle"></div>
+  <h3 id="caseSheetTitle">Nuevo caso</h3>
+  <div class="banner">⚠️ No introducir datos identificativos de pacientes.</div>
+  <input type="hidden" id="caseId">
+  <label>Fecha *</label><input type="date" id="cDate">
+  <label>Área *</label>
+  <div class="chip-group" id="cAreaChips"></div>
+  <input type="hidden" id="cArea">
+  <label>Procedimiento *</label>
+  <div class="chip-group" id="recentProcChips"></div>
+  <input type="text" id="cProcedure" list="dlProcedures" placeholder="Escribe o elige..." style="margin-top:6px">
+  <datalist id="dlProcedures"></datalist>
+  <label>Papel *</label>
+  <div class="chip-group" id="cRoleChips"></div>
+  <input type="hidden" id="cRole">
+  <label>Resultado técnico</label>
+  <div class="chip-group" id="cResultTechChips"></div>
+  <input type="hidden" id="cResultTech">
+  <details class="more">
+    <summary>Más opciones</summary>
+    <div class="group-label">🩺 Clínica</div>
+    <label>Indicación / diagnóstico</label><input type="text" id="cIndication" list="dlIndications">
+    <datalist id="dlIndications"></datalist>
+    <label>Subespecialidad</label><select id="cSub"></select>
+    <label>Categoría</label><select id="cCategory"></select>
+    <label>Región anatómica</label><select id="cRegion"></select>
+
+    <div class="group-label">🛠️ Técnica</div>
+    <label>Acceso</label><select id="cAccess"></select>
+    <label>Anestesia</label><select id="cAnesthesia"></select>
+    <label>Material / dispositivo</label><input type="text" id="cMaterial" list="dlMaterials">
+    <datalist id="dlMaterials"></datalist>
+
+    <div class="group-label">⚠️ Complicaciones</div>
+    <label>Complicación</label><select id="cCompl"></select>
+    <label>Descripción de la complicación</label><textarea id="cComplDesc"></textarea>
+
+    <div class="group-label">📋 Otros</div>
+    <label>Supervisor</label><input type="text" id="cSupervisor" placeholder="Nombre del supervisor">
+    <label>Nº de historia (opcional)</label><input type="text" id="cRecordNumber" placeholder="Solo uso local: no se exporta ni sincroniza">
+    <p class="small" style="margin:2px 0 0">Este dato se guarda únicamente en este dispositivo. No aparece en el CSV/Excel ni se envía a Google Sheets.</p>
+    <label>Notas</label><textarea id="cNotes"></textarea>
+  </details>
+  <div class="row" style="margin-top:14px">
+    <button class="btn btn-secondary" onclick="closeSheets()">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveCase()">GUARDAR</button>
+  </div>
+</div>
+
+<div class="sheet" id="goalSheet">
+  <div class="sheet-handle"></div>
+  <h3>Nuevo objetivo</h3>
+  <input type="hidden" id="goalId">
+  <label>Nombre</label><input type="text" id="goalName" placeholder="p.ej. Primer operador anual">
+  <label>Año</label><input type="number" id="goalYear">
+  <label>Campo</label>
+  <select id="goalField">
+    <option value="role">Papel</option>
+    <option value="area">Área</option>
+    <option value="sub">Subespecialidad</option>
+    <option value="procedure">Procedimiento (contiene texto)</option>
+  </select>
+  <label>Valor a contar</label><input type="text" id="goalValue" placeholder="p.ej. Primer operador">
+  <label>Objetivo (número)</label><input type="number" id="goalTarget" min="1" value="10">
+  <div class="row" style="margin-top:14px">
+    <button class="btn btn-secondary" onclick="closeSheets()">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveGoal()">Guardar objetivo</button>
+    <button class="btn btn-danger" id="goalDeleteBtn" style="display:none" onclick="deleteGoalConfirm()">Eliminar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== Almacenamiento ===================== */
+const LS_CASES='rad_cases', LS_CONFIG='rad_config', LS_LAST='rad_last', LS_GOALS='rad_goals', LS_PREF='rad_pref', LS_THEME='rad_theme';
+
+const DEFAULT_CONFIG = {
+  areas: ["Radiodiagnóstico","Intervencionismo periférico / Body","Neurorradiología intervencionista","Otros"],
+  subs: ["Vascular arterial","Vascular venoso","Intervencionismo oncológico","Intervencionismo no vascular","Neurovascular","Neurorradiología no vascular","Diagnóstico vascular","Otros"],
+  categories: ["Diagnóstico","Terapéutico","Mixto"],
+  roles: ["Observador","Asistente","Segundo operador","Primer operador","Supervisor","Otro"],
+  accesses: ["Radial","Femoral","Braquial","Carotídeo","Yugular","Punción directa","Transhepático","Transvenoso","Otro","No aplica"],
+  anesthesias: ["Local","Local + sedación","Sedación","General","Otro","No aplica"],
+  regions: ["Cerebro","Carótidas","Vertebrales","Intracraneal","Espinal","Cabeza y cuello","Tórax","Abdomen","Pelvis","Miembro superior","Miembro inferior","Renal","Hepático","Mesentérico","Aorta","Venoso","Otro"],
+  resultTechs: ["Éxito técnico","Éxito parcial","No realizado","Fallo técnico"],
+  complications: ["Sin complicaciones","Complicación menor","Complicación mayor"],
+  procedures: ["Angiografía diagnóstica","Flebografía","Angiografía visceral","Angiografía de miembros inferiores","Angiografía de miembros superiores","Angiografía renal","Angiografía mesentérica","Angiografía pélvica","Angioplastia","Stent arterial","Trombectomía arterial","Trombólisis","Recanalización arterial","Tratamiento de oclusión arterial","Tratamiento de pseudoaneurisma","Endoprótesis","Angioplastia venosa","Stent venoso","Trombectomía venosa","Trombólisis venosa","Filtro de vena cava","Retirada de filtro","Tratamiento de trombosis","Embolización arterial","Embolización de hemorragia","Embolización tumoral","Embolización visceral","Embolización uterina","Embolización de pseudoaneurisma","Embolización de malformación vascular","TACE","Radioembolización","Ablación por radiofrecuencia","Ablación por microondas","Crioablación","Ablación percutánea","Biopsia percutánea","Drenaje percutáneo","Drenaje de absceso","Nefrostomía","Gastrostomía","Colecistostomía","Punción/aspiración","Tratamiento percutáneo de colecciones","Angiografía cerebral","Angiografía medular","Flebografía cerebral","Trombectomía mecánica","Trombólisis intraarterial","Angioplastia intracraneal","Stent intracraneal","Stent carotídeo","Tratamiento de vasoespasmo","Coiling","Coiling asistido por balón","Coiling asistido por stent","Flow diverter","WEB","Embolización de MAV cerebral","Embolización de MAV espinal","Embolización de fístula AV dural","Embolización de fístula AV","Embolización preoperatoria","Embolización de tumor intracraneal","Embolización de tumor extracraneal","Otros"],
+  indications: ["Ictus isquémico","Aneurisma cerebral","MAV","Fístula AV dural","Hemorragia","Tumor hepático","HCC","Metástasis","Trombosis","Isquemia arterial","Pseudoaneurisma","Absceso","Obstrucción urinaria","Otros"],
+  materials: [
+    "Introductor — Vaina 4F","Introductor — Vaina 5F","Introductor — Vaina 6F","Introductor — Vaina 7F","Introductor — Vaina larga (cross-over)",
+    "Catéter — Pigtail","Catéter — Cobra C1/C2","Catéter — Vertebral","Catéter — Berenstein","Catéter — Simmons 1/2/3","Catéter — Kumpe/SOS","Catéter — Multipropósito (MPA)","Catéter — Navicross/soporte",
+    "Microcatéter — 2.4-2.8F genérico","Microcatéter — Progreat","Microcatéter — Renegade","Microcatéter — SL-10 / Echelon (neuro)",
+    "Guía — Hidrofílica 0.035 (Terumo)","Guía — Hidrofílica 0.018","Guía — Rígida Amplatz/Lunderquist","Guía — Estándar 0.035","Guía — Microguía 0.014","Guía — Microguía 0.018 neuro",
+    "Balón — Angioplastia convencional","Balón — Alta presión","Balón — Farmacoactivo (DCB)","Balón — Oclusión",
+    "Stent — Autoexpandible periférico","Stent — Balón-expandible","Stent — Recubierto (endoprótesis)","Stent — Venoso","Stent — Biliar","Stent — Carotídeo","Stent — Intracraneal",
+    "Endoprótesis — Aórtica (EVAR/TEVAR)",
+    "Coils — Desprendibles (detachable)","Coils — Pushables","Plug vascular (Amplatzer)",
+    "Agente embolizante — Partículas PVA","Agente embolizante — Microesferas calibradas","Agente embolizante — Esferas cargadas de quimioterapia (DEB-TACE)","Agente embolizante — Onyx","Agente embolizante — Glue (n-BCA)","Agente embolizante — Coils","Agente embolizante — Espuma de gelatina (Gelfoam)","Agente embolizante — Trombina",
+    "Radioembolización — Microesferas Y-90",
+    "Dispositivo trombectomía mecánica — Aspiración (Penumbra)","Dispositivo trombectomía mecánica — Stent retriever","Sistema de trombólisis farmacomecánica",
+    "Neuro — Flow diverter","Neuro — WEB","Neuro — Stent intracraneal (Neuroform/LVIS)","Neuro — Balón de remodelado",
+    "Aguja de punción/biopsia","Aguja coaxial","Sistema de biopsia core","Catéter de drenaje percutáneo (pigtail)","Catéter de nefrostomía","Catéter Doble J",
+    "Sistema de cierre — Perclose ProGlide","Sistema de cierre — AngioSeal/Star Close",
+    "Filtro de vena cava",
+    "Electrodo de radiofrecuencia","Antena de microondas","Sonda de crioablación",
+    "Otro"
+  ],
+};
+
+function loadJSON(key, fallback){ try{const v=localStorage.getItem(key); return v?JSON.parse(v):fallback;}catch(e){return fallback;} }
+function saveJSON(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){ toast('Error guardando datos: '+e.message); } }
+
+let CASES = loadJSON(LS_CASES, []);
+let CONFIG = loadJSON(LS_CONFIG, JSON.parse(JSON.stringify(DEFAULT_CONFIG)));
+let LAST = loadJSON(LS_LAST, {});
+let GOALS = loadJSON(LS_GOALS, []);
+(function migrateMaterialsV2(){
+  if(!CONFIG.materialsV2){
+    const merged = [...new Set([...(CONFIG.materials||[]), ...DEFAULT_CONFIG.materials])];
+    CONFIG.materials = merged;
+    CONFIG.materialsV2 = true;
+    saveJSON(LS_CONFIG, CONFIG);
+  }
+})();
+let PREF = loadJSON(LS_PREF, {remember:true});
+const LS_SYNC='rad_sync';
+let SYNC = loadJSON(LS_SYNC, {url:'',token:'',auto:false,last:null});
+
+/* ===================== Utilidades ===================== */
+function uid(){ return 'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function todayStr(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function yearOf(dateStr){ return parseInt((dateStr||todayStr()).slice(0,4),10); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+function fillSelect(sel, arr, placeholder){
+  sel.innerHTML='';
+  if(placeholder){ const o=document.createElement('option'); o.value=''; o.textContent=placeholder; sel.appendChild(o); }
+  arr.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
+}
+function fillDatalist(dl, arr){ dl.innerHTML=''; arr.forEach(v=>{ const o=document.createElement('option'); o.value=v; dl.appendChild(o); }); }
+function buildChips(containerId, hiddenId, options, selected){
+  const box=document.getElementById(containerId);
+  box.innerHTML='';
+  options.forEach(v=>{
+    const c=document.createElement('div');
+    c.className='chip'+(v===selected?' selected':'');
+    c.textContent=v;
+    c.onclick=()=>{
+      box.querySelectorAll('.chip').forEach(x=>x.classList.remove('selected'));
+      c.classList.add('selected');
+      document.getElementById(hiddenId).value=v;
+    };
+    box.appendChild(c);
+  });
+  document.getElementById(hiddenId).value = selected||'';
+}
+function recentProcedures(n){
+  const seen=new Set(), list=[];
+  [...CASES].sort((a,b)=>b.createdAt-a.createdAt).forEach(c=>{
+    if(c.procedure && !seen.has(c.procedure)){ seen.add(c.procedure); list.push(c.procedure); }
+  });
+  return list.slice(0,n);
+}
+function esc(s){ return (s===undefined||s===null)?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ===================== Navegación ===================== */
+function showSection(name){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  document.querySelectorAll('nav.bottom button').forEach(b=>b.classList.toggle('active', b.dataset.sec===name));
+  if(name==='dashboard') renderDashboard();
+  if(name==='logbook') renderLogbook();
+  if(name==='stats') renderStats();
+  if(name==='config') renderConfig();
+}
+function closeSheets(){
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('caseSheet').classList.remove('show');
+  document.getElementById('goalSheet').classList.remove('show');
+}
+function openSheet(id){ document.getElementById('overlay').classList.add('show'); document.getElementById(id).classList.add('show'); }
+
+/* ===================== Formulario de caso ===================== */
+function populateFormLists(){
+  fillSelect(document.getElementById('cSub'), CONFIG.subs, '(ninguna)');
+  fillSelect(document.getElementById('cCategory'), CONFIG.categories, '(ninguna)');
+  fillSelect(document.getElementById('cRegion'), CONFIG.regions, '(ninguna)');
+  fillSelect(document.getElementById('cAccess'), CONFIG.accesses, '(ninguna)');
+  fillSelect(document.getElementById('cAnesthesia'), CONFIG.anesthesias, '(ninguna)');
+  fillSelect(document.getElementById('cCompl'), CONFIG.complications, '(ninguna)');
+  fillDatalist(document.getElementById('dlProcedures'), CONFIG.procedures);
+  fillDatalist(document.getElementById('dlIndications'), CONFIG.indications);
+  fillDatalist(document.getElementById('dlMaterials'), CONFIG.materials);
+}
+function openForm(prefill){
+  populateFormLists();
+  document.getElementById('caseSheetTitle').textContent='Nuevo caso';
+  document.getElementById('caseId').value='';
+  const set=(id,v)=>document.getElementById(id).value=v||'';
+  const p = prefill || (PREF.remember ? LAST : {});
+  set('cDate', todayStr());
+  set('cArea', p.area||''); set('cSub', p.sub||''); set('cProcedure', prefill?prefill.procedure:'');
+  set('cRole', p.role||''); set('cResultTech', 'Éxito técnico');
+  set('cCategory', p.category||''); set('cRegion', prefill?prefill.region:'');
+  set('cIndication',''); set('cAccess', p.access||''); set('cAnesthesia', p.anesthesia||'');
+  set('cSupervisor', prefill?prefill.supervisor:''); set('cMaterial',''); set('cCompl','Sin complicaciones');
+  document.getElementById('cRecordNumber').value='';
+  set('cComplDesc',''); set('cNotes','');
+  buildChips('cAreaChips','cArea', CONFIG.areas, p.area||'');
+  buildChips('cRoleChips','cRole', CONFIG.roles, p.role||'');
+  buildChips('cResultTechChips','cResultTech', CONFIG.resultTechs, 'Éxito técnico');
+  buildChips('recentProcChips','cProcedure', recentProcedures(6), prefill?prefill.procedure:'');
+  document.getElementById('cProcedure').value = prefill?(prefill.procedure||''):'';
+  openSheet('caseSheet');
+}
+function openEditForm(id){
+  const c = CASES.find(x=>x.id===id); if(!c) return;
+  populateFormLists();
+  document.getElementById('caseSheetTitle').textContent='Editar caso';
+  document.getElementById('caseId').value=c.id;
+  document.getElementById('cDate').value=c.date;
+  document.getElementById('cArea').value=c.area||'';
+  document.getElementById('cSub').value=c.subarea||'';
+  document.getElementById('cProcedure').value=c.procedure||'';
+  document.getElementById('cRole').value=c.role||'';
+  document.getElementById('cResultTech').value=c.resultTech||'';
+  document.getElementById('cCategory').value=c.category||'';
+  document.getElementById('cRegion').value=c.region||'';
+  document.getElementById('cIndication').value=c.indication||'';
+  document.getElementById('cAccess').value=c.access||'';
+  document.getElementById('cAnesthesia').value=c.anesthesia||'';
+  document.getElementById('cSupervisor').value=c.supervisor||'';
+  document.getElementById('cMaterial').value=c.material||'';
+  document.getElementById('cRecordNumber').value=c.recordNumber||'';
+  document.getElementById('cCompl').value=c.complication||'';
+  document.getElementById('cComplDesc').value=c.complicationDesc||'';
+  document.getElementById('cNotes').value=c.notes||'';
+  buildChips('cAreaChips','cArea', CONFIG.areas, c.area||'');
+  buildChips('cRoleChips','cRole', CONFIG.roles, c.role||'');
+  buildChips('cResultTechChips','cResultTech', CONFIG.resultTechs, c.resultTech||'');
+  buildChips('recentProcChips','cProcedure', recentProcedures(6), '');
+  document.getElementById('cProcedure').value=c.procedure||'';
+  openSheet('caseSheet');
+}
+function duplicateLast(){
+  if(!CASES.length){ toast('No hay casos previos'); return; }
+  const last = [...CASES].sort((a,b)=>b.createdAt-a.createdAt)[0];
+  openForm(last);
+}
+function saveCase(){
+  const g=id=>document.getElementById(id).value.trim();
+  const date=g('cDate')||todayStr(), area=g('cArea'), procedure=g('cProcedure'), role=g('cRole');
+  if(!date||!area||!procedure||!role){ toast('Faltan campos obligatorios: Fecha, Área, Procedimiento, Papel'); return; }
+  const id = document.getElementById('caseId').value || uid();
+  const existingIdx = CASES.findIndex(c=>c.id===id);
+  const now = Date.now();
+  const obj = {
+    id, date, year: yearOf(date), area, subarea:g('cSub'), category:g('cCategory'),
+    procedure, region:g('cRegion'), indication:g('cIndication'), role,
+    supervisor:g('cSupervisor'), access:g('cAccess'), anesthesia:g('cAnesthesia'),
+    material:g('cMaterial'), resultTech:g('cResultTech'), complication:g('cCompl'),
+    complicationDesc:g('cComplDesc'), notes:g('cNotes'), recordNumber:g('cRecordNumber'),
+    createdAt: existingIdx>=0?CASES[existingIdx].createdAt:now, updatedAt: now
+  };
+  if(existingIdx>=0) CASES[existingIdx]=obj; else CASES.push(obj);
+  saveJSON(LS_CASES, CASES);
+  LAST = {area, sub:g('cSub'), procedure, role, access:g('cAccess'), anesthesia:g('cAnesthesia'), category:g('cCategory')};
+  saveJSON(LS_LAST, LAST);
+  addToListIfNew('procedures', procedure); addToListIfNew('indications', g('cIndication')); addToListIfNew('materials', g('cMaterial'));
+  closeSheets();
+  toast('Caso guardado ✓');
+  populateYearSelectors();
+  showSection('dashboard');
+  if(SYNC.auto && SYNC.url) syncNow();
+}
+function addToListIfNew(key, val){
+  if(!val) return;
+  if(!CONFIG[key].some(v=>v.toLowerCase()===val.toLowerCase())){ CONFIG[key].push(val); saveJSON(LS_CONFIG, CONFIG); }
+}
+function deleteCase(id){
+  if(!confirm('¿Seguro que quieres eliminar este caso?')) return;
+  CASES = CASES.filter(c=>c.id!==id);
+  saveJSON(LS_CASES, CASES);
+  toast('Caso eliminado');
+  renderLogbook(); renderDashboard();
+}
+function duplicateCase(id){
+  const c = CASES.find(x=>x.id===id); if(!c) return;
+  openForm(c);
+}
+
+/* ===================== Años disponibles ===================== */
+function allYears(){
+  const ys = new Set(CASES.map(c=>c.year));
+  const cur = new Date().getFullYear();
+  ys.add(cur); ys.add(cur+1);
+  return [...ys].sort((a,b)=>b-a);
+}
+function populateYearSelectors(){
+  const ys = allYears();
+  [document.getElementById('fYear'), document.getElementById('statsYear')].forEach(sel=>{
+    const cur = sel.value;
+    sel.innerHTML='<option value="">Todos los años</option>';
+    ys.forEach(y=>{ const o=document.createElement('option'); o.value=y; o.textContent=y; sel.appendChild(o); });
+    if(cur && ys.includes(parseInt(cur))) sel.value=cur; else sel.value = ys[0]!==undefined? new Date().getFullYear() : '';
+  });
+}
+
+/* ===================== Requisitos oficiales (CIRSE/EBIR, ESMINT/EBNR) ===================== */
+const OFFICIAL_REQUIREMENTS = [
+  {id:'ebir_total', group:'RVI · CIRSE/EBIR', name:'Procedimientos IR como primer operador', target:250,
+   match:c=>c.role==='Primer operador', source:'https://cirse.org/education/ebir/entry-criteria-application'},
+  {id:'ebir_vascular', group:'RVI · CIRSE/EBIR', name:'…de los cuales, vascular / oncológico vascular', target:150,
+   match:c=>c.role==='Primer operador' && (c.area==='Intervencionismo periférico / Body' || ['Vascular arterial','Vascular venoso','Intervencionismo oncológico','Diagnóstico vascular'].includes(c.subarea)),
+   source:'https://cirse.org/education/ebir/entry-criteria-application'},
+  {id:'esmint_total', group:'Neuro · ESMINT/EBNR', name:'Procedimientos neurointervencionistas (logbook, ≥24 meses)', target:50,
+   match:c=>c.area==='Neurorradiología intervencionista', source:'https://www.ebnr.org/nav/31'}
+];
+function requirementActual(req){ return CASES.filter(req.match).length; }
+function donutSVG(pct, id){
+  const r=40, circ=2*Math.PI*r, off=circ*(1-Math.min(100,pct)/100);
+  return `<svg width="120" height="120" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--border)" stroke-width="10"/>
+    <circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--primary)" stroke-width="10" stroke-linecap="round"
+      stroke-dasharray="${circ}" stroke-dashoffset="${off}" transform="rotate(-90 50 50)"/>
+    <text x="50" y="56" text-anchor="middle" style="font-size:20px;font-weight:800;fill:var(--text)">${Math.round(pct)}%</text>
+  </svg>`;
+}
+function renderRequirementDonuts(containerId){
+  const groups={};
+  OFFICIAL_REQUIREMENTS.forEach(r=>{ (groups[r.group]=groups[r.group]||[]).push(r); });
+  const html = Object.keys(groups).map(g=>{
+    const main = groups[g][0];
+    const actual = requirementActual(main);
+    const pct = main.target? (actual/main.target*100) : 0;
+    const extra = groups[g].slice(1).map(r=>{
+      const a2=requirementActual(r); const p2=Math.min(100,Math.round(a2/r.target*100));
+      return `<div class="progress" title="${esc(r.name)}"><div style="width:${p2}%">${a2}/${r.target}</div></div>`;
+    }).join('');
+    return `<div class="donut-box">
+      ${donutSVG(pct)}
+      <div class="lbl">${esc(g)}</div>
+      <div class="sub">${actual}/${main.target} · ${esc(main.name)}</div>
+      ${extra}
+    </div>`;
+  }).join('');
+  document.getElementById(containerId).innerHTML = html;
+}
+
+/* ===================== Dashboard ===================== */
+function renderDashboard(){
+  renderRequirementDonuts('reqDonuts');
+  const recent = [...CASES].sort((a,b)=>b.createdAt-a.createdAt).slice(0,3);
+  document.getElementById('dashRecent').innerHTML = recent.length? recent.map(c=>caseCardHTML(c,false)).join('') : '<p class="small">Sin casos todavía.</p>';
+}
+
+/* ===================== Logbook ===================== */
+function toggleFilters(){ const p=document.getElementById('filterPanel'); p.style.display = p.style.display==='none'?'block':'none'; }
+function clearFilters(){
+  ['fFrom','fTo','fText','fRecord'].forEach(id=>document.getElementById(id).value='');
+  ['fArea','fSub','fRole','fResult','fCompl'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fYear').value='';
+  renderLogbook();
+}
+function populateFilterLists(){
+  fillSelect(document.getElementById('fArea'), CONFIG.areas, 'Todas');
+  fillSelect(document.getElementById('fSub'), CONFIG.subs, 'Todas');
+  fillSelect(document.getElementById('fRole'), CONFIG.roles, 'Todos');
+  fillSelect(document.getElementById('fResult'), CONFIG.resultTechs, 'Todos');
+  fillSelect(document.getElementById('fCompl'), CONFIG.complications, 'Todas');
+}
+function renderLogbook(){
+  populateFilterLists();
+  const fy=document.getElementById('fYear').value, ffrom=document.getElementById('fFrom').value, fto=document.getElementById('fTo').value;
+  const farea=document.getElementById('fArea').value, fsub=document.getElementById('fSub').value, frole=document.getElementById('fRole').value;
+  const fres=document.getElementById('fResult').value, fcompl=document.getElementById('fCompl').value, ftext=(document.getElementById('fText').value||'').toLowerCase();
+  const frecord=(document.getElementById('fRecord').value||'').toLowerCase().trim();
+  let list = [...CASES];
+  if(fy) list=list.filter(c=>String(c.year)===fy);
+  if(ffrom) list=list.filter(c=>c.date>=ffrom);
+  if(fto) list=list.filter(c=>c.date<=fto);
+  if(farea) list=list.filter(c=>c.area===farea);
+  if(fsub) list=list.filter(c=>c.subarea===fsub);
+  if(frole) list=list.filter(c=>c.role===frole);
+  if(fres) list=list.filter(c=>c.resultTech===fres);
+  if(fcompl) list=list.filter(c=>c.complication===fcompl);
+  if(ftext) list=list.filter(c=>(c.procedure||'').toLowerCase().includes(ftext));
+  if(frecord) list=list.filter(c=>(c.recordNumber||'').toLowerCase().includes(frecord));
+  list.sort((a,b)=>b.date.localeCompare(a.date) || b.createdAt-a.createdAt);
+  document.getElementById('logbookCount').textContent = list.length+' caso(s)';
+  document.getElementById('logbookList').innerHTML = list.length? list.map(c=>caseCardHTML(c,true)).join('') : '<p class="small">No hay casos con estos filtros.</p>';
+}
+function caseCardHTML(c, withActions){
+  return `<div class="case-card">
+    <div class="top-row" onclick="toggleDetail('${c.id}')"><span>${esc(c.procedure)}</span><span>${esc(c.date)}</span></div>
+    <div class="sub" onclick="toggleDetail('${c.id}')">${esc(c.area)} · ${esc(c.role)} · ${esc(c.resultTech||'—')}${c.recordNumber?(' · <span class="tag">Hª '+esc(c.recordNumber)+'</span>'):''}</div>
+    <div class="detail" id="det-${c.id}">
+      <p><span class="tag">${esc(c.subarea||'-')}</span><span class="tag">${esc(c.category||'-')}</span><span class="tag">${esc(c.region||'-')}</span></p>
+      <p><b>Indicación:</b> ${esc(c.indication||'-')}</p>
+      ${c.recordNumber?`<p><b>Nº historia (solo local):</b> ${esc(c.recordNumber)}</p>`:''}
+      <p><b>Acceso:</b> ${esc(c.access||'-')} · <b>Anestesia:</b> ${esc(c.anesthesia||'-')}</p>
+      <p><b>Supervisor:</b> ${esc(c.supervisor||'-')}</p>
+      <p><b>Material:</b> ${esc(c.material||'-')}</p>
+      <p><b>Complicación:</b> ${esc(c.complication||'-')} ${c.complicationDesc?('- '+esc(c.complicationDesc)):''}</p>
+      <p><b>Notas:</b> ${esc(c.notes||'-')}</p>
+      ${withActions?`<div class="row" style="margin-top:8px">
+        <button class="btn btn-sm btn-secondary" onclick="openEditForm('${c.id}')">Editar</button>
+        <button class="btn btn-sm btn-secondary" onclick="duplicateCase('${c.id}')">Duplicar</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteCase('${c.id}')">Eliminar</button>
+      </div>`:''}
+    </div>
+  </div>`;
+}
+function toggleDetail(id){ document.getElementById('det-'+id).classList.toggle('open'); }
+
+/* ===================== Estadísticas ===================== */
+function barChart(container, dataObj, maxItems){
+  let entries = Object.entries(dataObj).sort((a,b)=>b[1]-a[1]);
+  if(maxItems) entries=entries.slice(0,maxItems);
+  const max = Math.max(1, ...entries.map(e=>e[1]));
+  container.innerHTML = entries.length? entries.map(([k,v])=>`
+    <div class="bar-row"><div class="bar-label">${esc(k)}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/max*100)}%"></div></div><div class="bar-val">${v}</div></div>
+  `).join('') : '<p class="small">Sin datos.</p>';
+}
+function countBy(list, field){
+  const o={}; list.forEach(c=>{ const k=c[field]||'(sin especificar)'; o[k]=(o[k]||0)+1; }); return o;
+}
+function renderStats(){
+  const ySel=document.getElementById('statsYear').value;
+  const list = ySel? CASES.filter(c=>String(c.year)===ySel) : CASES;
+  const diag = list.filter(c=>c.category==='Diagnóstico').length;
+  const terap = list.filter(c=>c.category==='Terapéutico').length;
+  const mixto = list.filter(c=>c.category==='Mixto').length;
+  barChart(document.getElementById('statDT'), {'Diagnóstico':diag,'Terapéutico':terap,'Mixto':mixto});
+  barChart(document.getElementById('statArea'), countBy(list,'area'));
+  barChart(document.getElementById('statRole'), countBy(list,'role'));
+  barChart(document.getElementById('statRegion'), countBy(list,'region'),8);
+  const byMonth={};
+  list.forEach(c=>{ const m=c.date.slice(0,7); byMonth[m]=(byMonth[m]||0)+1; });
+  const monthEntries = Object.entries(byMonth).sort((a,b)=>a[0].localeCompare(b[0]));
+  const maxM = Math.max(1,...monthEntries.map(e=>e[1]));
+  document.getElementById('statMonth').innerHTML = monthEntries.length? monthEntries.map(([k,v])=>`
+    <div class="bar-row"><div class="bar-label">${k}</div><div class="bar-track"><div class="bar-fill" style="width:${v/maxM*100}%"></div></div><div class="bar-val">${v}</div></div>`).join('') : '<p class="small">Sin datos.</p>';
+  const success = list.filter(c=>c.resultTech==='Éxito técnico').length;
+  const compl = list.filter(c=>c.complication && c.complication!=='Sin complicaciones').length;
+  document.getElementById('statResult').innerHTML = `<p>Éxito técnico: <b>${list.length? Math.round(success/list.length*100):0}%</b> (${success}/${list.length})</p>
+    <p>Tasa de complicaciones: <b>${list.length? Math.round(compl/list.length*100):0}%</b> (${compl}/${list.length})</p>`;
+  renderOfficialRequirements();
+  renderGoals();
+}
+function renderOfficialRequirements(){
+  document.getElementById('officialReqList').innerHTML = OFFICIAL_REQUIREMENTS.map(r=>{
+    const actual=requirementActual(r), pct=Math.min(100,Math.round(actual/r.target*100));
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between"><b>${esc(r.group)}</b><a class="linklike" href="${r.source}" target="_blank" rel="noopener">fuente ↗</a></div>
+      <div class="small">${esc(r.name)} · ${actual}/${r.target}</div>
+      <div class="progress"><div style="width:${pct}%">${pct}%</div></div>
+    </div>`;
+  }).join('');
+}
+
+/* ===================== Objetivos ===================== */
+function openGoalForm(id){
+  const g = id? GOALS.find(x=>x.id===id) : null;
+  document.getElementById('goalId').value = g?g.id:'';
+  document.getElementById('goalName').value = g?g.name:'';
+  document.getElementById('goalYear').value = g?g.year:new Date().getFullYear();
+  document.getElementById('goalField').value = g?g.field:'role';
+  document.getElementById('goalValue').value = g?g.value:'';
+  document.getElementById('goalTarget').value = g?g.target:10;
+  document.getElementById('goalDeleteBtn').style.display = g? 'block':'none';
+  openSheet('goalSheet');
+}
+function saveGoal(){
+  const name=document.getElementById('goalName').value.trim()||'Objetivo';
+  const year=parseInt(document.getElementById('goalYear').value)||new Date().getFullYear();
+  const field=document.getElementById('goalField').value;
+  const value=document.getElementById('goalValue').value.trim();
+  const target=parseInt(document.getElementById('goalTarget').value)||1;
+  if(!value){ toast('Indica el valor a contar'); return; }
+  const id=document.getElementById('goalId').value || uid();
+  const idx=GOALS.findIndex(g=>g.id===id);
+  const obj={id,name,year,field,value,target};
+  if(idx>=0) GOALS[idx]=obj; else GOALS.push(obj);
+  saveJSON(LS_GOALS, GOALS);
+  closeSheets(); renderGoals(); toast('Objetivo guardado');
+}
+function deleteGoalConfirm(){
+  const id=document.getElementById('goalId').value;
+  if(!id || !confirm('¿Eliminar este objetivo?')) return;
+  GOALS = GOALS.filter(g=>g.id!==id); saveJSON(LS_GOALS, GOALS);
+  closeSheets(); renderGoals(); toast('Objetivo eliminado');
+}
+function goalActual(g){
+  const list = CASES.filter(c=>c.year===g.year);
+  if(g.field==='procedure') return list.filter(c=>(c.procedure||'').toLowerCase().includes(g.value.toLowerCase())).length;
+  const map={role:'role',area:'area',sub:'subarea'};
+  return list.filter(c=>c[map[g.field]]===g.value).length;
+}
+function renderGoals(){
+  document.getElementById('goalsList').innerHTML = GOALS.length? GOALS.map(g=>{
+    const actual=goalActual(g), pct=Math.min(100,Math.round(actual/g.target*100));
+    return `<div style="margin-bottom:12px" onclick="openGoalForm('${g.id}')">
+      <div style="display:flex;justify-content:space-between"><b>${esc(g.name)}</b><span>${g.year}</span></div>
+      <div class="small">${esc(g.value)} · ${actual}/${g.target}</div>
+      <div class="progress"><div style="width:${pct}%">${pct}%</div></div>
+    </div>`;
+  }).join('') : '<p class="small">Sin objetivos definidos.</p>';
+}
+
+/* ===================== Configuración ===================== */
+const CONFIG_LABELS = {areas:'Áreas',subs:'Subespecialidades',accesses:'Accesos',anesthesias:'Tipos de anestesia',regions:'Regiones anatómicas',procedures:'Procedimientos',indications:'Indicaciones frecuentes',materials:'Materiales/dispositivos'};
+function renderConfig(){
+  const wrap = document.getElementById('configLists');
+  wrap.innerHTML = Object.keys(CONFIG_LABELS).map(key=>`
+    <label>${CONFIG_LABELS[key]}</label>
+    <textarea data-key="${key}" style="min-height:90px">${esc(CONFIG[key].join('\n'))}</textarea>
+  `).join('');
+  document.getElementById('rememberLast').checked = !!PREF.remember;
+  document.getElementById('syncUrl').value = SYNC.url||'';
+  document.getElementById('syncToken').value = SYNC.token||'';
+  document.getElementById('syncAuto').checked = !!SYNC.auto;
+  document.getElementById('syncStatus').textContent = SYNC.last? ('Última sincronización: '+new Date(SYNC.last).toLocaleString()) : 'Sin sincronizar todavía.';
+}
+function saveSyncConfig(){
+  SYNC.url = document.getElementById('syncUrl').value.trim();
+  SYNC.token = document.getElementById('syncToken').value.trim();
+  SYNC.auto = document.getElementById('syncAuto').checked;
+  saveJSON(LS_SYNC, SYNC);
+  toast('Configuración de sincronización guardada');
+}
+async function syncNow(){
+  if(!SYNC.url){ toast('Configura primero la URL de sincronización'); return; }
+  const statusEl = document.getElementById('syncStatus');
+  if(statusEl) statusEl.textContent='Sincronizando...';
+  try{
+    const localRecordNumbers = {};
+    CASES.forEach(c=>{ if(c.recordNumber) localRecordNumbers[c.id]=c.recordNumber; });
+    const payloadCases = CASES.map(c=>{ const copy={...c}; delete copy.recordNumber; return copy; });
+    const res = await fetch(SYNC.url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({token:SYNC.token, cases:payloadCases})});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    if(Array.isArray(data.cases)){
+      CASES = data.cases.map(c=>({...c, year: c.year?parseInt(c.year):yearOf(c.date), createdAt:Number(c.createdAt)||Date.now(), updatedAt:Number(c.updatedAt)||Date.now(), recordNumber: localRecordNumbers[c.id]||''}));
+      saveJSON(LS_CASES, CASES);
+      populateYearSelectors();
+    }
+    SYNC.last = new Date().toISOString();
+    saveJSON(LS_SYNC, SYNC);
+    if(statusEl) statusEl.textContent='Última sincronización: '+new Date(SYNC.last).toLocaleString();
+    toast('Sincronizado ✓ ('+CASES.length+' casos)');
+    renderDashboard();
+    if(document.getElementById('sec-logbook').classList.contains('active')) renderLogbook();
+  }catch(err){
+    if(statusEl) statusEl.textContent='Error de sincronización: '+err.message;
+    toast('Error al sincronizar: '+err.message);
+  }
+}
+function saveConfigLists(){
+  document.querySelectorAll('#configLists textarea').forEach(t=>{
+    const key=t.dataset.key;
+    CONFIG[key] = t.value.split('\n').map(s=>s.trim()).filter(Boolean);
+  });
+  saveJSON(LS_CONFIG, CONFIG);
+  toast('Listas guardadas');
+}
+function saveRememberPref(){
+  PREF.remember = document.getElementById('rememberLast').checked;
+  saveJSON(LS_PREF, PREF);
+}
+function resetConfig(){
+  if(!confirm('¿Restaurar la configuración predeterminada? Esto no borra tus casos.')) return;
+  CONFIG = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  saveJSON(LS_CONFIG, CONFIG);
+  renderConfig(); toast('Configuración restaurada');
+}
+
+/* ===================== Exportación CSV ===================== */
+function csvEscape(v){ v=(v===undefined||v===null)?'':String(v); if(/[",\n;]/.test(v)) v='"'+v.replace(/"/g,'""')+'"'; return v; }
+function exportCSV(){
+  const cols=['id','date','year','area','subarea','category','procedure','region','indication','role','supervisor','access','anesthesia','material','resultTech','complication','complicationDesc','notes'];
+  const headers=['ID','Fecha','Año','Área','Subespecialidad','Categoría','Procedimiento','Región anatómica','Indicación','Papel','Supervisor','Acceso','Anestesia','Material/dispositivo','Resultado técnico','Complicación','Descripción complicación','Notas'];
+  let rows=[headers.join(';')];
+  CASES.forEach(c=>{ rows.push(cols.map(k=>csvEscape(c[k])).join(';')); });
+  const csv = '\uFEFF'+rows.join('\r\n');
+  downloadBlob(csv, 'logbook_ri_'+todayStr()+'.csv', 'text/csv;charset=utf-8');
+  toast('CSV exportado');
+}
+function downloadBlob(content, filename, type){
+  const blob = new Blob([content], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+/* ===================== JSON backup/restore ===================== */
+function exportJSON(){
+  const data = {version:1, exportedAt:new Date().toISOString(), cases:CASES, config:CONFIG, goals:GOALS};
+  downloadBlob(JSON.stringify(data,null,2), 'logbook_ri_backup_'+todayStr()+'.json', 'application/json');
+  toast('Backup JSON exportado');
+}
+function importJSON(ev){
+  const file = ev.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!data.cases || !Array.isArray(data.cases)) throw new Error('Formato inválido: falta "cases"');
+      if(!confirm('Se importarán '+data.cases.length+' caso(s). Se creará backup automático antes de continuar. ¿Continuar?')) { ev.target.value=''; return; }
+      downloadBlob(JSON.stringify({version:1, exportedAt:new Date().toISOString(), cases:CASES, config:CONFIG, goals:GOALS},null,2), 'auto_backup_pre_import_'+Date.now()+'.json', 'application/json');
+      const existingIds = new Set(CASES.map(c=>c.id));
+      let added=0;
+      data.cases.forEach(c=>{ if(!existingIds.has(c.id)){ CASES.push(c); existingIds.add(c.id); added++; } });
+      if(data.config){ Object.keys(data.config).forEach(k=>{ if(Array.isArray(data.config[k])){ CONFIG[k]=[...new Set([...(CONFIG[k]||[]),...data.config[k]])]; } }); saveJSON(LS_CONFIG,CONFIG); }
+      if(data.goals && Array.isArray(data.goals)){ const gids=new Set(GOALS.map(g=>g.id)); data.goals.forEach(g=>{ if(!gids.has(g.id)){ GOALS.push(g); } }); saveJSON(LS_GOALS,GOALS); }
+      saveJSON(LS_CASES, CASES);
+      toast(added+' caso(s) importado(s)');
+      populateYearSelectors(); showSection('dashboard');
+    }catch(err){ alert('Error al importar: '+err.message); }
+    ev.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+/* ===================== Datos de ejemplo ===================== */
+function loadSampleData(){
+  if(!confirm('¿Cargar casos de ejemplo (ficticios)? No afecta a tus casos reales.')) return;
+  const samples = [
+    {area:'Neurorradiología intervencionista', sub:'Neurovascular', category:'Terapéutico', procedure:'Trombectomía mecánica', region:'Intracraneal', indication:'Ictus isquémico', role:'Segundo operador', access:'Femoral', anesthesia:'Sedación', resultTech:'Éxito técnico', complication:'Sin complicaciones'},
+    {area:'Neurorradiología intervencionista', sub:'Neurovascular', category:'Terapéutico', procedure:'Flow diverter', region:'Cerebro', indication:'Aneurisma cerebral', role:'Asistente', access:'Radial', anesthesia:'General', resultTech:'Éxito técnico', complication:'Sin complicaciones'},
+    {area:'Intervencionismo periférico / Body', sub:'Vascular arterial', category:'Terapéutico', procedure:'Angioplastia', region:'Miembro inferior', indication:'Isquemia arterial', role:'Primer operador', access:'Femoral', anesthesia:'Local', resultTech:'Éxito técnico', complication:'Sin complicaciones'},
+    {area:'Intervencionismo oncológico', sub:'Intervencionismo oncológico', category:'Terapéutico', procedure:'TACE', region:'Hepático', indication:'HCC', role:'Segundo operador', access:'Femoral', anesthesia:'Local + sedación', resultTech:'Éxito técnico', complication:'Complicación menor', complicationDesc:'Dolor postembolización leve'},
+    {area:'Intervencionismo periférico / Body', sub:'Intervencionismo no vascular', category:'Diagnóstico', procedure:'Biopsia percutánea', region:'Renal', indication:'Metástasis', role:'Primer operador', access:'Punción directa', anesthesia:'Local', resultTech:'Éxito técnico', complication:'Sin complicaciones'},
+    {area:'Intervencionismo periférico / Body', sub:'Intervencionismo no vascular', category:'Terapéutico', procedure:'Nefrostomía', region:'Renal', indication:'Obstrucción urinaria', role:'Observador', access:'Punción directa', anesthesia:'Local', resultTech:'Éxito técnico', complication:'Sin complicaciones'},
+    {area:'Radiodiagnóstico', sub:'Diagnóstico vascular', category:'Diagnóstico', procedure:'Angiografía cerebral', region:'Cerebro', indication:'MAV', role:'Asistente', access:'Radial', anesthesia:'Local', resultTech:'Éxito técnico', complication:'Sin complicaciones'},
+    {area:'Intervencionismo periférico / Body', sub:'Vascular venoso', category:'Terapéutico', procedure:'Filtro de vena cava', region:'Venoso', indication:'Trombosis', role:'Segundo operador', access:'Yugular', anesthesia:'Local', resultTech:'Éxito técnico', complication:'Sin complicaciones'},
+    {area:'Neurorradiología intervencionista', sub:'Neurovascular', category:'Terapéutico', procedure:'Coiling', region:'Cerebro', indication:'Aneurisma cerebral', role:'Primer operador', access:'Femoral', anesthesia:'General', resultTech:'Éxito parcial', complication:'Complicación mayor', complicationDesc:'Vasoespasmo intraprocedimiento'},
+    {area:'Intervencionismo periférico / Body', sub:'Intervencionismo oncológico', category:'Terapéutico', procedure:'Ablación por radiofrecuencia', region:'Hepático', indication:'HCC', role:'Segundo operador', access:'Punción directa', anesthesia:'Sedación', resultTech:'Éxito técnico', complication:'Sin complicaciones'},
+  ];
+  const now = new Date();
+  samples.forEach((s,i)=>{
+    const d = new Date(now); d.setDate(d.getDate()-i*7);
+    const dateStr = d.toISOString().slice(0,10);
+    CASES.push(Object.assign({id:uid(), date:dateStr, year:yearOf(dateStr), supervisor:'Dr. Ejemplo', material:'', notes:'Caso de ejemplo ficticio'}, s, {createdAt:Date.now()-i, updatedAt:Date.now()-i}));
+  });
+  saveJSON(LS_CASES, CASES);
+  populateYearSelectors(); showSection('dashboard');
+  toast('Datos de ejemplo cargados');
+}
+function wipeAll(){
+  if(!confirm('Esto borrará TODOS los casos, objetivos y configuración personalizada. ¿Continuar?')) return;
+  if(!confirm('Confirma de nuevo: esta acción no se puede deshacer.')) return;
+  localStorage.removeItem(LS_CASES); localStorage.removeItem(LS_GOALS); localStorage.removeItem(LS_CONFIG); localStorage.removeItem(LS_LAST);
+  CASES=[]; GOALS=[]; CONFIG=JSON.parse(JSON.stringify(DEFAULT_CONFIG)); LAST={};
+  populateYearSelectors(); showSection('dashboard');
+  toast('Datos borrados');
+}
+
+/* ===================== Resumen anual imprimible ===================== */
+function printSummary(){
+  const y = new Date().getFullYear();
+  const list = CASES.filter(c=>c.year===y);
+  const byArea=countBy(list,'area'), byRole=countBy(list,'role'), byProc=countBy(list,'procedure');
+  const success = list.filter(c=>c.resultTech==='Éxito técnico').length;
+  const compl = list.filter(c=>c.complication && c.complication!=='Sin complicaciones').length;
+  const w = window.open('', '_blank');
+  w.document.write(`<html><head><title>Resumen ${y}</title><style>body{font-family:Arial;padding:24px}h1{color:#0e6e8c}table{width:100%;border-collapse:collapse;margin:10px 0}td,th{border:1px solid #ccc;padding:6px;text-align:left}</style></head><body>
+  <h1>Resumen anual ${y}</h1>
+  <p>Total de casos: <b>${list.length}</b> · Éxito técnico: <b>${list.length?Math.round(success/list.length*100):0}%</b> · Complicaciones: <b>${compl}</b></p>
+  <h3>Por área</h3><table>${Object.entries(byArea).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join('')}</table>
+  <h3>Por papel</h3><table>${Object.entries(byRole).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join('')}</table>
+  <h3>Por procedimiento</h3><table>${Object.entries(byProc).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join('')}</table>
+  <script>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+
+/* ===================== Tema ===================== */
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem(LS_THEME, next);
+}
+(function initTheme(){ const t=localStorage.getItem(LS_THEME); if(t) document.documentElement.setAttribute('data-theme', t); })();
+
+/* ===================== Inicio ===================== */
+populateYearSelectors();
+showSection('dashboard');
+if(!CASES.length){ setTimeout(()=>{ if(confirm('¿Quieres cargar unos casos de ejemplo ficticios para ver cómo funciona la app?')) loadSampleData(); }, 400); }
+</script>
+</body>
+</html>
